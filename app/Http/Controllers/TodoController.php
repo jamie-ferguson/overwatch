@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Todo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Rules\Exists;
 
 class TodoController extends Controller
 {
@@ -14,7 +16,7 @@ class TodoController extends Controller
      */
     public function index()
     {
-        return Todo::get();
+        return Todo::where('user_id', Auth::id())->paginate(15);
     }
 
     /**
@@ -25,6 +27,17 @@ class TodoController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'title' => 'required|string',
+            'description' => 'string',
+            'user_id' => [new Exists],
+        ]);
+
+        // set the user_id
+        $request->merge([
+            'user_id' => Auth::id(),
+        ]);
+
         return Todo::create($request->all());
     }
 
@@ -36,6 +49,7 @@ class TodoController extends Controller
      */
     public function show(Todo $todo)
     {
+        $this->authorize('view', $todo);
         return $todo;
     }
 
@@ -48,6 +62,13 @@ class TodoController extends Controller
      */
     public function update(Request $request, Todo $todo)
     {
+        $request->validate([
+            'title' => 'string',
+            'description' => 'string',
+            'complete' => 'boolean',
+            'user_id' => [new Exists],
+        ]);
+
         return $todo->update($request->all());
     }
 
@@ -59,6 +80,7 @@ class TodoController extends Controller
      */
     public function destroy(Todo $todo)
     {
+        $this->authorize('delete', $todo);
         return response()->json([
             'success' => !!$todo->delete()
         ]);

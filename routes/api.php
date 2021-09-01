@@ -20,7 +20,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::resource('todos', '\App\Http\Controllers\TodoController')->except(['edit', 'create']);
+Route::resource('todos', '\App\Http\Controllers\TodoController')->except(['edit', 'create'])->middleware('auth:sanctum');;
+
 
 Route::post('/login', function (Request $request) {
     $request->validate([
